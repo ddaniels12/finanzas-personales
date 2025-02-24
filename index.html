@@ -7,16 +7,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         :root {
-            --bg-primary: #121212;
-            --bg-secondary: #1e1e1e;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --accent: #6200ee;
-            --accent-light: #bb86fc;
-            --success: #03dac6;
-            --error: #cf6679;
-            --card-bg: #2d2d2d;
-            --border-color: #333;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #8b5cf6;
+            --accent-light: #a78bfa;
+            --success: #10b981;
+            --error: #ef4444;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
 
         * {
@@ -24,23 +25,35 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.2s ease;
         }
 
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
+            line-height: 1.6;
         }
 
         header {
             background-color: var(--bg-secondary);
             padding: 1.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
             margin-bottom: 2rem;
+            position: relative;
         }
 
         h1, h2, h3 {
             color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
         }
 
         .container {
@@ -64,9 +77,21 @@
 
         .card {
             background-color: var(--card-bg);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
         }
 
         .card-title {
@@ -82,6 +107,9 @@
             font-size: 2rem;
             margin: 1rem 0;
             color: var(--accent-light);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
         }
 
         .data-input {
@@ -92,24 +120,39 @@
         }
 
         input, button, select {
-            padding: 0.8rem;
-            border-radius: 5px;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
             background-color: var(--bg-secondary);
             color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
         }
 
         button {
-            background-color: var(--accent);
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
             color: white;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
         }
 
         button:hover {
-            background-color: var(--accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         .chart-container {
@@ -126,15 +169,18 @@
         }
 
         .stat-item {
-            background-color: var(--bg-secondary);
+            background-color: rgba(30, 41, 59, 0.5);
             padding: 1rem;
-            border-radius: 5px;
+            border-radius: 8px;
             text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .stat-value {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
+            font-weight: 600;
         }
 
         .stat-label {
@@ -154,6 +200,8 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1.5rem;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         th, td {
@@ -163,12 +211,13 @@
         }
 
         th {
-            background-color: var(--bg-secondary);
+            background-color: rgba(30, 41, 59, 0.7);
             color: var(--text-secondary);
+            font-weight: 600;
         }
 
         tr:hover {
-            background-color: rgba(187, 134, 252, 0.1);
+            background-color: rgba(139, 92, 246, 0.1);
         }
 
         .actions {
@@ -177,114 +226,355 @@
         }
 
         .btn-small {
-            padding: 0.3rem 0.6rem;
+            padding: 0.4rem 0.7rem;
             font-size: 0.8rem;
+            border-radius: 6px;
         }
 
         .btn-delete {
-            background-color: var(--error);
+            background: linear-gradient(90deg, #ef4444, #f87171);
         }
 
         .btn-edit {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        /* Login Styles */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background-color: var(--bg-primary);
+        }
+
+        .login-box {
             background-color: var(--bg-secondary);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+        }
+
+        .login-logo {
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+
+        .login-title {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .login-form input {
+            padding: 1rem;
+            font-size: 1rem;
+        }
+
+        .login-form button {
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .error-message {
+            color: var(--error);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-left: auto;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .logout-btn {
+            background-color: transparent;
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            box-shadow: none;
+        }
+
+        .logout-btn:hover {
+            color: var(--text-primary);
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Dashboard de Finanzas Personales</h1>
+    <!-- Login Container -->
+    <div id="login-container" class="login-container">
+        <div class="login-box">
+            <div class="login-logo">💰 FinanzasApp</div>
+            <h2 class="login-title">Acceder a tu Dashboard</h2>
+            <form id="login-form" class="login-form">
+                <input type="text" id="username" placeholder="Nombre de usuario" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+            <div id="error-message" class="error-message">Credenciales incorrectas. Inténtalo de nuevo.</div>
         </div>
-    </header>
+    </div>
 
-    <main class="container">
-        <div class="dashboard-grid">
-            <!-- Sección de Ahorros -->
-            <div class="card">
-                <div class="card-title">
-                    <h2>Mis Ahorros</h2>
-                </div>
-
-                <div class="total-balance" id="savings-balance">$0.00</div>
-                
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="savings-gain">0%</div>
-                        <div class="stat-label">Rendimiento</div>
+    <!-- Main App (hidden until login) -->
+    <div id="app-container" class="hidden">
+        <header>
+            <div class="container">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>Dashboard de Finanzas Personales</h1>
+                    <div class="user-info">
+                        <div class="user-avatar" id="user-avatar">U</div>
+                        <button id="logout-btn" class="logout-btn">Cerrar Sesión</button>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="savings-change">$0.00</div>
-                        <div class="stat-label">Cambio</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="savings-history">0</div>
-                        <div class="stat-label">Registros</div>
-                    </div>
-                </div>
-
-                <div class="data-input">
-                    <input type="number" id="savings-input" placeholder="Saldo actual en ahorros">
-                    <button id="update-savings">Actualizar Ahorros</button>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="savings-chart"></canvas>
                 </div>
             </div>
+        </header>
 
-            <!-- Sección de Acciones -->
-            <div class="card">
-                <div class="card-title">
-                    <h2>Mi Portafolio de Acciones</h2>
+        <main class="container">
+            <div class="dashboard-grid">
+                <!-- Sección de Ahorros -->
+                <div class="card">
+                    <div class="card-title">
+                        <h2>📊 Mis Ahorros</h2>
+                    </div>
+
+                    <div class="total-balance" id="savings-balance">$0.00</div>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="savings-gain">0%</div>
+                            <div class="stat-label">Rendimiento</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="savings-change">$0.00</div>
+                            <div class="stat-label">Cambio</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="savings-history">0</div>
+                            <div class="stat-label">Registros</div>
+                        </div>
+                    </div>
+
+                    <div class="data-input">
+                        <input type="number" id="savings-input" placeholder="Saldo actual en ahorros">
+                        <button id="update-savings">Actualizar Ahorros</button>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="savings-chart"></canvas>
+                    </div>
                 </div>
 
-                <div class="total-balance" id="stocks-balance">$0.00</div>
-                
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="stocks-gain">0%</div>
-                        <div class="stat-label">Rendimiento</div>
+                <!-- Sección de Acciones -->
+                <div class="card">
+                    <div class="card-title">
+                        <h2>📈 Mi Portafolio de Acciones</h2>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="stocks-change">$0.00</div>
-                        <div class="stat-label">Cambio</div>
+
+                    <div class="total-balance" id="stocks-balance">$0.00</div>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="stocks-gain">0%</div>
+                            <div class="stat-label">Rendimiento</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="stocks-change">$0.00</div>
+                            <div class="stat-label">Cambio</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="stocks-count">0</div>
+                            <div class="stat-label">Acciones</div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="stocks-count">0</div>
-                        <div class="stat-label">Acciones</div>
+
+                    <div class="data-input">
+                        <input type="text" id="stock-symbol" placeholder="Símbolo de la acción (ej. AAPL)">
+                        <input type="number" id="stock-shares" placeholder="Número de acciones">
+                        <input type="number" id="stock-price" placeholder="Precio actual por acción">
+                        <button id="add-stock">Agregar Acción</button>
                     </div>
-                </div>
 
-                <div class="data-input">
-                    <input type="text" id="stock-symbol" placeholder="Símbolo de la acción (ej. AAPL)">
-                    <input type="number" id="stock-shares" placeholder="Número de acciones">
-                    <input type="number" id="stock-price" placeholder="Precio actual por acción">
-                    <button id="add-stock">Agregar Acción</button>
-                </div>
+                    <table id="stocks-table">
+                        <thead>
+                            <tr>
+                                <th>Símbolo</th>
+                                <th>Acciones</th>
+                                <th>Precio</th>
+                                <th>Valor</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Aquí se agregarán las acciones dinámicamente -->
+                        </tbody>
+                    </table>
 
-                <table id="stocks-table">
-                    <thead>
-                        <tr>
-                            <th>Símbolo</th>
-                            <th>Acciones</th>
-                            <th>Precio</th>
-                            <th>Valor</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Aquí se agregarán las acciones dinámicamente -->
-                    </tbody>
-                </table>
-
-                <div class="chart-container">
-                    <canvas id="stocks-chart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="stocks-chart"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script>
+        // Configuración de Autenticación
+        const USER_CREDENTIALS = {
+            username: "admin",
+            password: "finance2024"
+        };
+
+        // Comprobación de autenticación
+        function checkAuthentication() {
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            if (isAuthenticated === 'true') {
+                showApp();
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-container').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            
+            // Configurar avatar de usuario
+            const username = localStorage.getItem('username') || USER_CREDENTIALS.username;
+            document.getElementById('user-avatar').textContent = username.charAt(0).toUpperCase();
+        }
+
+        // Manejar inicio de sesión
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === USER_CREDENTIALS.username && password === USER_CREDENTIALS.password) {
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('username', username);
+                showApp();
+                loadData(); // Cargar datos después de la autenticación
+            } else {
+                document.getElementById('error-message').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('error-message').classList.remove('show');
+                }, 3000);
+            }
+        });
+
+        // Manejar cierre de sesión
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('isAuthenticated');
+            showLogin();
+        });
+
         // Inicialización de datos
         let savingsData = {
             balance: 0,
@@ -299,24 +589,37 @@
 
         // Cargar datos guardados si existen
         function loadData() {
-            const savedSavings = localStorage.getItem('savingsData');
-            const savedStocks = localStorage.getItem('stocksData');
+            const username = localStorage.getItem('username');
+            const userDataKey = `finanzas_${username}_data`;
             
-            if (savedSavings) {
-                savingsData = JSON.parse(savedSavings);
-                updateSavingsDisplay();
-            }
+            const savedData = localStorage.getItem(userDataKey);
             
-            if (savedStocks) {
-                stocksData = JSON.parse(savedStocks);
-                updateStocksDisplay();
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                if (data.savingsData) {
+                    savingsData = data.savingsData;
+                    updateSavingsDisplay();
+                }
+                
+                if (data.stocksData) {
+                    stocksData = data.stocksData;
+                    updateStocksDisplay();
+                }
             }
         }
 
         // Guardar datos
         function saveData() {
-            localStorage.setItem('savingsData', JSON.stringify(savingsData));
-            localStorage.setItem('stocksData', JSON.stringify(stocksData));
+            const username = localStorage.getItem('username');
+            const userDataKey = `finanzas_${username}_data`;
+            
+            const data = {
+                savingsData: savingsData,
+                stocksData: stocksData
+            };
+            
+            localStorage.setItem(userDataKey, JSON.stringify(data));
         }
 
         // Formatear moneda
@@ -378,8 +681,8 @@
                     datasets: [{
                         label: 'Balance de Ahorros',
                         data: savingsData.history,
-                        borderColor: '#bb86fc',
-                        backgroundColor: 'rgba(187, 134, 252, 0.1)',
+                        borderColor: '#a78bfa',
+                        backgroundColor: 'rgba(167, 139, 250, 0.1)',
                         tension: 0.4,
                         fill: true
                     }]
@@ -390,7 +693,7 @@
                     plugins: {
                         legend: {
                             labels: {
-                                color: '#e0e0e0'
+                                color: '#f1f5f9'
                             }
                         }
                     },
@@ -401,7 +704,7 @@
                                 color: 'rgba(255, 255, 255, 0.1)'
                             },
                             ticks: {
-                                color: '#a0a0a0',
+                                color: '#94a3b8',
                                 callback: function(value) {
                                     return formatCurrency(value);
                                 }
@@ -412,7 +715,7 @@
                                 color: 'rgba(255, 255, 255, 0.1)'
                             },
                             ticks: {
-                                color: '#a0a0a0'
+                                color: '#94a3b8'
                             }
                         }
                     }
@@ -519,16 +822,16 @@
             const labels = stocksData.stocks.map(stock => stock.symbol);
             const data = stocksData.stocks.map(stock => stock.shares * stock.price);
             const backgroundColors = [
-                'rgba(255, 99, 132, 0.7)',
-                'rgba(54, 162, 235, 0.7)',
-                'rgba(255, 206, 86, 0.7)',
-                'rgba(75, 192, 192, 0.7)',
-                'rgba(153, 102, 255, 0.7)',
-                'rgba(255, 159, 64, 0.7)',
-                'rgba(199, 199, 199, 0.7)',
-                'rgba(83, 102, 255, 0.7)',
-                'rgba(40, 159, 64, 0.7)',
-                'rgba(210, 199, 199, 0.7)'
+                'rgba(129, 140, 248, 0.8)',
+                'rgba(56, 189, 248, 0.8)',
+                'rgba(251, 146, 60, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(167, 139, 250, 0.8)',
+                'rgba(248, 113, 113, 0.8)',
+                'rgba(99, 102, 241, 0.8)',
+                'rgba(14, 165, 233, 0.8)',
+                'rgba(249, 115, 22, 0.8)',
+                'rgba(239, 68, 68, 0.8)'
             ];
             
             // Destruir gráfico existente si hay uno
@@ -544,7 +847,7 @@
                         datasets: [{
                             data: data,
                             backgroundColor: backgroundColors.slice(0, labels.length),
-                            borderColor: '#2d2d2d',
+                            borderColor: '#1e293b',
                             borderWidth: 2
                         }]
                     },
@@ -555,7 +858,7 @@
                             legend: {
                                 position: 'right',
                                 labels: {
-                                    color: '#e0e0e0',
+                                    color: '#f1f5f9',
                                     padding: 10,
                                     boxWidth: 15
                                 }
@@ -599,6 +902,13 @@
                 
                 // Limpiar el input
                 input.value = '';
+                
+                // Mostrar mensaje de éxito (opcional)
+                const button = this;
+                button.textContent = '✓ Actualizado';
+                setTimeout(() => {
+                    button.textContent = 'Actualizar Ahorros';
+                }, 1500);
             } else {
                 alert('Por favor ingresa un valor válido para tus ahorros.');
             }
@@ -610,40 +920,42 @@
             const priceInput = document.getElementById('stock-price');
             
             const symbol = symbolInput.value.trim().toUpperCase();
-            const shares = parseInt(sharesInput.value);
+                        const shares = parseInt(sharesInput.value);
             const price = parseFloat(priceInput.value);
-            
-            if (symbol && !isNaN(shares) && !isNaN(price) && shares > 0 && price >= 0) {
-                // Revisar si estamos editando o agregando
+
+            if (symbol && !isNaN(shares) && shares > 0 && !isNaN(price) && price > 0) {
+                const existingStockIndex = stocksData.stocks.findIndex(stock => stock.symbol === symbol);
                 const editIndex = this.getAttribute('data-edit-index');
-                
-                if (editIndex !== null) {
-                    // Editar acción existente
+
+                if (editIndex !== null && editIndex !== undefined) {
+                    // Modo edición
                     stocksData.stocks[editIndex] = { symbol, shares, price };
-                    
-                    // Restaurar botón
                     this.textContent = 'Agregar Acción';
                     this.removeAttribute('data-edit-index');
+                } else if (existingStockIndex !== -1) {
+                    // Si la acción ya existe, actualizar su cantidad y precio
+                    stocksData.stocks[existingStockIndex].shares += shares;
+                    stocksData.stocks[existingStockIndex].price = price;
                 } else {
                     // Agregar nueva acción
                     stocksData.stocks.push({ symbol, shares, price });
                 }
-                
+
                 // Actualizar visualización y guardar
                 updateStocksDisplay();
                 saveData();
-                
+
                 // Limpiar inputs
                 symbolInput.value = '';
                 sharesInput.value = '';
                 priceInput.value = '';
             } else {
-                alert('Por favor completa todos los campos correctamente.');
+                alert('Por favor ingresa valores válidos para la acción.');
             }
         });
 
-        // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', loadData);
+        // Verificar autenticación al cargar la página
+        document.addEventListener('DOMContentLoaded', checkAuthentication);
     </script>
 </body>
 </html>
