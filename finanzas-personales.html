@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Finanzas Personales</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #6200ee;
+            --accent-light: #bb86fc;
+            --success: #03dac6;
+            --error: #cf6679;
+            --card-bg: #2d2d2d;
+            --border-color: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--bg-secondary);
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        h1, h2, h3 {
+            color: var(--text-primary);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-bottom: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.8rem;
+        }
+
+        .total-balance {
+            font-size: 2rem;
+            margin: 1rem 0;
+            color: var(--accent-light);
+        }
+
+        .data-input {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        input, button, select {
+            padding: 0.8rem;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-light);
+        }
+
+        .chart-container {
+            margin-top: 1.5rem;
+            height: 250px;
+            position: relative;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-item {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--error);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        th, td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        tr:hover {
+            background-color: rgba(187, 134, 252, 0.1);
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-delete {
+            background-color: var(--error);
+        }
+
+        .btn-edit {
+            background-color: var(--bg-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Dashboard de Finanzas Personales</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="dashboard-grid">
+            <!-- Sección de Ahorros -->
+            <div class="card">
+                <div class="card-title">
+                    <h2>Mis Ahorros</h2>
+                </div>
+
+                <div class="total-balance" id="savings-balance">$0.00</div>
+                
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="savings-gain">0%</div>
+                        <div class="stat-label">Rendimiento</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="savings-change">$0.00</div>
+                        <div class="stat-label">Cambio</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="savings-history">0</div>
+                        <div class="stat-label">Registros</div>
+                    </div>
+                </div>
+
+                <div class="data-input">
+                    <input type="number" id="savings-input" placeholder="Saldo actual en ahorros">
+                    <button id="update-savings">Actualizar Ahorros</button>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="savings-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Sección de Acciones -->
+            <div class="card">
+                <div class="card-title">
+                    <h2>Mi Portafolio de Acciones</h2>
+                </div>
+
+                <div class="total-balance" id="stocks-balance">$0.00</div>
+                
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stocks-gain">0%</div>
+                        <div class="stat-label">Rendimiento</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stocks-change">$0.00</div>
+                        <div class="stat-label">Cambio</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stocks-count">0</div>
+                        <div class="stat-label">Acciones</div>
+                    </div>
+                </div>
+
+                <div class="data-input">
+                    <input type="text" id="stock-symbol" placeholder="Símbolo de la acción (ej. AAPL)">
+                    <input type="number" id="stock-shares" placeholder="Número de acciones">
+                    <input type="number" id="stock-price" placeholder="Precio actual por acción">
+                    <button id="add-stock">Agregar Acción</button>
+                </div>
+
+                <table id="stocks-table">
+                    <thead>
+                        <tr>
+                            <th>Símbolo</th>
+                            <th>Acciones</th>
+                            <th>Precio</th>
+                            <th>Valor</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Aquí se agregarán las acciones dinámicamente -->
+                    </tbody>
+                </table>
+
+                <div class="chart-container">
+                    <canvas id="stocks-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Inicialización de datos
+        let savingsData = {
+            balance: 0,
+            history: [],
+            labels: []
+        };
+
+        let stocksData = {
+            stocks: [],
+            totalValue: 0
+        };
+
+        // Cargar datos guardados si existen
+        function loadData() {
+            const savedSavings = localStorage.getItem('savingsData');
+            const savedStocks = localStorage.getItem('stocksData');
+            
+            if (savedSavings) {
+                savingsData = JSON.parse(savedSavings);
+                updateSavingsDisplay();
+            }
+            
+            if (savedStocks) {
+                stocksData = JSON.parse(savedStocks);
+                updateStocksDisplay();
+            }
+        }
+
+        // Guardar datos
+        function saveData() {
+            localStorage.setItem('savingsData', JSON.stringify(savingsData));
+            localStorage.setItem('stocksData', JSON.stringify(stocksData));
+        }
+
+        // Formatear moneda
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-ES', { 
+                style: 'currency', 
+                currency: 'USD' 
+            }).format(amount);
+        }
+
+        // Actualizar visualización de ahorros
+        function updateSavingsDisplay() {
+            const balanceElement = document.getElementById('savings-balance');
+            const gainElement = document.getElementById('savings-gain');
+            const changeElement = document.getElementById('savings-change');
+            const historyElement = document.getElementById('savings-history');
+            
+            balanceElement.textContent = formatCurrency(savingsData.balance);
+            historyElement.textContent = savingsData.history.length;
+            
+            if (savingsData.history.length > 1) {
+                const previousBalance = savingsData.history[savingsData.history.length - 2];
+                const currentBalance = savingsData.balance;
+                const change = currentBalance - previousBalance;
+                const percentChange = (change / previousBalance) * 100;
+                
+                gainElement.textContent = percentChange.toFixed(2) + '%';
+                changeElement.textContent = formatCurrency(change);
+                
+                if (percentChange >= 0) {
+                    gainElement.classList.add('positive');
+                    gainElement.classList.remove('negative');
+                    changeElement.classList.add('positive');
+                    changeElement.classList.remove('negative');
+                } else {
+                    gainElement.classList.add('negative');
+                    gainElement.classList.remove('positive');
+                    changeElement.classList.add('negative');
+                    changeElement.classList.remove('positive');
+                }
+            }
+            
+            updateSavingsChart();
+        }
+
+        // Actualizar gráfico de ahorros
+        function updateSavingsChart() {
+            const ctx = document.getElementById('savings-chart').getContext('2d');
+            
+            // Destruir gráfico existente si hay uno
+            if (window.savingsChart) {
+                window.savingsChart.destroy();
+            }
+            
+            window.savingsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: savingsData.labels,
+                    datasets: [{
+                        label: 'Balance de Ahorros',
+                        data: savingsData.history,
+                        borderColor: '#bb86fc',
+                        backgroundColor: 'rgba(187, 134, 252, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#a0a0a0',
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#a0a0a0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Actualizar visualización de acciones
+        function updateStocksDisplay() {
+            const balanceElement = document.getElementById('stocks-balance');
+            const gainElement = document.getElementById('stocks-gain');
+            const changeElement = document.getElementById('stocks-change');
+            const countElement = document.getElementById('stocks-count');
+            const tableBody = document.querySelector('#stocks-table tbody');
+            
+            // Calcular valor total
+            let totalValue = 0;
+            stocksData.stocks.forEach(stock => {
+                totalValue += stock.shares * stock.price;
+            });
+            
+            // Calcular cambio si hay datos históricos
+            if (stocksData.totalValue > 0 && totalValue !== stocksData.totalValue) {
+                const change = totalValue - stocksData.totalValue;
+                const percentChange = (change / stocksData.totalValue) * 100;
+                
+                gainElement.textContent = percentChange.toFixed(2) + '%';
+                changeElement.textContent = formatCurrency(change);
+                
+                if (percentChange >= 0) {
+                    gainElement.classList.add('positive');
+                    gainElement.classList.remove('negative');
+                    changeElement.classList.add('positive');
+                    changeElement.classList.remove('negative');
+                } else {
+                    gainElement.classList.add('negative');
+                    gainElement.classList.remove('positive');
+                    changeElement.classList.add('negative');
+                    changeElement.classList.remove('positive');
+                }
+            }
+            
+            stocksData.totalValue = totalValue;
+            
+            balanceElement.textContent = formatCurrency(totalValue);
+            countElement.textContent = stocksData.stocks.length;
+            
+            // Limpiar tabla
+            tableBody.innerHTML = '';
+            
+            // Rellenar tabla con acciones
+            stocksData.stocks.forEach((stock, index) => {
+                const value = stock.shares * stock.price;
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${stock.symbol}</td>
+                    <td>${stock.shares}</td>
+                    <td>${formatCurrency(stock.price)}</td>
+                    <td>${formatCurrency(value)}</td>
+                    <td class="actions">
+                        <button class="btn-small btn-edit" data-index="${index}">Editar</button>
+                        <button class="btn-small btn-delete" data-index="${index}">Eliminar</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            updateStocksChart();
+            
+            // Agregar event listeners a los botones
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    stocksData.stocks.splice(index, 1);
+                    updateStocksDisplay();
+                    saveData();
+                });
+            });
+            
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    const stock = stocksData.stocks[index];
+                    
+                    document.getElementById('stock-symbol').value = stock.symbol;
+                    document.getElementById('stock-shares').value = stock.shares;
+                    document.getElementById('stock-price').value = stock.price;
+                    
+                    // Cambiar el botón de agregar a actualizar
+                    const addButton = document.getElementById('add-stock');
+                    addButton.textContent = 'Actualizar Acción';
+                    addButton.setAttribute('data-edit-index', index);
+                });
+            });
+        }
+
+        // Actualizar gráfico de acciones
+        function updateStocksChart() {
+            const ctx = document.getElementById('stocks-chart').getContext('2d');
+            
+            // Preparar datos para el gráfico
+            const labels = stocksData.stocks.map(stock => stock.symbol);
+            const data = stocksData.stocks.map(stock => stock.shares * stock.price);
+            const backgroundColors = [
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(199, 199, 199, 0.7)',
+                'rgba(83, 102, 255, 0.7)',
+                'rgba(40, 159, 64, 0.7)',
+                'rgba(210, 199, 199, 0.7)'
+            ];
+            
+            // Destruir gráfico existente si hay uno
+            if (window.stocksChart) {
+                window.stocksChart.destroy();
+            }
+            
+            if (labels.length > 0) {
+                window.stocksChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: backgroundColors.slice(0, labels.length),
+                            borderColor: '#2d2d2d',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#e0e0e0',
+                                    padding: 10,
+                                    boxWidth: 15
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.chart.getDatasetMeta(0).total;
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('update-savings').addEventListener('click', function() {
+            const input = document.getElementById('savings-input');
+            const value = parseFloat(input.value);
+            
+            if (!isNaN(value) && value >= 0) {
+                savingsData.balance = value;
+                
+                // Guardar el valor histórico
+                savingsData.history.push(value);
+                
+                // Agregar fecha actual como etiqueta
+                const now = new Date();
+                const dateStr = `${now.getDate()}/${now.getMonth() + 1}`;
+                savingsData.labels.push(dateStr);
+                
+                // Actualizar visualización y guardar
+                updateSavingsDisplay();
+                saveData();
+                
+                // Limpiar el input
+                input.value = '';
+            } else {
+                alert('Por favor ingresa un valor válido para tus ahorros.');
+            }
+        });
+
+        document.getElementById('add-stock').addEventListener('click', function() {
+            const symbolInput = document.getElementById('stock-symbol');
+            const sharesInput = document.getElementById('stock-shares');
+            const priceInput = document.getElementById('stock-price');
+            
+            const symbol = symbolInput.value.trim().toUpperCase();
+            const shares = parseInt(sharesInput.value);
+            const price = parseFloat(priceInput.value);
+            
+            if (symbol && !isNaN(shares) && !isNaN(price) && shares > 0 && price >= 0) {
+                // Revisar si estamos editando o agregando
+                const editIndex = this.getAttribute('data-edit-index');
+                
+                if (editIndex !== null) {
+                    // Editar acción existente
+                    stocksData.stocks[editIndex] = { symbol, shares, price };
+                    
+                    // Restaurar botón
+                    this.textContent = 'Agregar Acción';
+                    this.removeAttribute('data-edit-index');
+                } else {
+                    // Agregar nueva acción
+                    stocksData.stocks.push({ symbol, shares, price });
+                }
+                
+                // Actualizar visualización y guardar
+                updateStocksDisplay();
+                saveData();
+                
+                // Limpiar inputs
+                symbolInput.value = '';
+                sharesInput.value = '';
+                priceInput.value = '';
+            } else {
+                alert('Por favor completa todos los campos correctamente.');
+            }
+        });
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
